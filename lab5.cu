@@ -13,11 +13,15 @@
  * @param num_regions	input of this kernel, number of regions we use to reduce lock contentions
  * @param n		input of this kernel, total number of element in input array
  */
-__global__ void global_max(int *values, int *max,
-                int *reg_maxes,
-                int num_regions, int n)
+__global__ void global_max(int *values, int *max, int *reg_maxes, int num_regions, int n)
 {
-  
+    int i = threadIdx.x + blockDim.x * blockIdx.x; 
+    int val = values[i];
+    int region = i % num_regions; 
+    if(atomicMax(&reg_maxes[region],val) < val) 
+    { 
+        atomicMax(max,val); 
+    }
 }
 
 // Write the cuda kernel to normal all elements in input values,
@@ -25,6 +29,11 @@ __global__ void global_max(int *values, int *max,
 // values, n is the total number of elements in values.
 __global__ void normalize(int *values, int *max, float *output, int n)
 {
+    int i = threadIdx.x + blockDim.x * blockIdx.x; 
+    if(i < n)
+    {
+        output[i] = (float) values[i] / (float)max[0];
+    }
 
 }   
  
